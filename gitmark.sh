@@ -1,12 +1,14 @@
-#!/bin/bash
+#!/bin/sh
 
-# Configuration
-OUTPUT_FILE="llm_context.md"
-MAX_FILESIZE_KB=100 # Exclude files larger than this many KB
-ADD_LINE_NUMBERS=true # Set to false if you want code without line numbers
+# Configuration (Defaults can be overridden by Environment Variables)
+# Usage: OUTPUT_FILE="my_context.md" ADD_LINE_NUMBERS=false curl ... | sh
+OUTPUT_FILE="${OUTPUT_FILE:-llm_context.md}"
+MAX_FILESIZE_KB="${MAX_FILESIZE_KB:-100}"
+ADD_LINE_NUMBERS="${ADD_LINE_NUMBERS:-true}"
 
 # --- PIPE-AWARENESS LOGIC ---
-if [[ -f "$0" ]]; then
+# If the script is run locally, exclude itself. If piped, $0 is usually 'sh'.
+if [ -f "$0" ]; then
     SCRIPT_NAME="$(basename "$0")"
     EXCLUDE_PATTERN="^($SCRIPT_NAME|$OUTPUT_FILE)$"
 else
@@ -14,11 +16,11 @@ else
 fi
 
 # --- SMART IGNORE (NOISE FILES) ---
-# Exclude lockfiles and minified code which burn tokens uselessly
+# Exclude lockfiles and minified code
 NOISE_FILES="package-lock.json|yarn.lock|pnpm-lock.yaml|go.sum|cargo.lock|\.min\.js|\.min\.css|\.svg"
 EXCLUDE_PATTERN="$EXCLUDE_PATTERN|($NOISE_FILES)"
 
-# Safety check
+# Safety check: Ensure we are in a git repo
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "❌ Error: Not a git repository."
     exit 1
@@ -56,27 +58,34 @@ echo "---" >> "$OUTPUT_FILE"
 MAX_BYTES=$((MAX_FILESIZE_KB * 1024))
 
 git ls-files --cached --others --exclude-standard | while read -r file; do
-    if [[ "$file" =~ $EXCLUDE_PATTERN ]]; then continue; fi
+    # Check exclusion pattern
+    if echo "$file" | grep -qE "$EXCLUDE_PATTERN"; then continue; fi
 
-    if [[ -f "$file" ]]; then
+    if [ -f "$file" ]; then
+        # Check file size
         FILE_SIZE=$(wc -c < "$file")
-        if [[ "$FILE_SIZE" -gt "$MAX_BYTES" ]]; then
+        if [ "$FILE_SIZE" -gt "$MAX_BYTES" ]; then
             echo "⚠️ Skipping large file: $file ($((FILE_SIZE / 1024))KB)"
             continue
         fi
 
+        # Check if text file using 'file' command
         if file -b --mime-type "$file" | grep -q "text"; then
             echo "✅ Adding: $file"
+            
+            # Extract extension for code block
             ext="${file##*.}"
-            if [[ "$file" == "$ext" ]]; then ext="text"; fi
+            # If no extension, default to text
+            if [ "$ext" = "$file" ]; then ext="text"; fi
 
             echo "## File: \`$file\`" >> "$OUTPUT_FILE"
             echo "<file path=\"$file\">" >> "$OUTPUT_FILE"
             echo '```'"$ext" >> "$OUTPUT_FILE"
             
             # Feature: Optional Line Numbers
-            if [ "$ADD_LINE_NUMBERS" = true ]; then
-                cat -n "$file" >> "$OUTPUT_FILE"
+            if [ "$ADD_LINE_NUMBERS" = "true" ]; then
+                # nl -ba numbers all lines (POSIX equivalent to cat -n)
+                nl -ba "$file" >> "$OUTPUT_FILE"
             else
                 cat "$file" >> "$OUTPUT_FILE"
             fi
