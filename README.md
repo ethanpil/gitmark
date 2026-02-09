@@ -1,6 +1,6 @@
 # GitMark
 
-**GitMark** is a lightweight, pipe-friendly shell script designed to aggregate your Git repository into a single, formatted Markdown file. It creates a context-rich prompt perfect for pasting into Large Language Models (LLMs) like ChatGPT, Claude, or Gemini.
+**GitMark** is a lightweight, pipe-friendly shell script designed to aggregate your Git repository into a single, formatted Markdown file. The outpput file is designed to be uploaded or pasted into chat infercaes of Large Language Models (LLMs) like ChatGPT, Claude, or Gemini.
 
 It respects your `.gitignore`, filters out "noise" (lockfiles, binaries), and includes a directory tree for structural context.
 
@@ -16,7 +16,8 @@ It respects your `.gitignore`, filters out "noise" (lockfiles, binaries), and in
 
 ## ⚡ Quick Start (One-Liner)
 
-Run GitMark directly from the web without downloading anything. This commands pipes the script into `sh` and runs it in your current repo's directory. GitMark does not operate outside of a Git repo.
+Run GitMark directly from the web without downloading anything, and leaves no traces except the output file. 
+This commands pipes the script into `sh` and runs it in your current repo's directory. GitMark does not operate outside of a Git repo.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ethanpil/gitmark/refs/heads/main/gitmark.sh | sh
