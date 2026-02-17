@@ -26,6 +26,8 @@ curl -fsSL https://raw.githubusercontent.com/ethanpil/gitmark/refs/heads/main/gi
 
 *This generates a file named `llm_context.md` in your current directory.*
 
+⚠️ **NOTE:** Are files in your `.gitignore` are still being included? This is happening because git tracks files even if they are in .gitignore if they were committed *before* you added the ignore rule. In this scenario, `git ls-files` faithfully reports everything Git is tracking.  To prevent this from happening you can completely remove the tracked files without deleting them. `git rm -r --cached [item]`
+
 ---
 
 ## Configuration
