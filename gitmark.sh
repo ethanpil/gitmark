@@ -5,6 +5,7 @@
 OUTPUT_FILE="${OUTPUT_FILE:-llm_context.md}"
 MAX_FILESIZE_KB="${MAX_FILESIZE_KB:-100}"
 ADD_LINE_NUMBERS="${ADD_LINE_NUMBERS:-true}"
+EXCLUDE="${EXCLUDE:-}"
 
 # --- PIPE-AWARENESS LOGIC ---
 # If the script is run locally, exclude itself. If piped, $0 is usually 'sh'.
@@ -17,8 +18,15 @@ fi
 
 # --- SMART IGNORE (NOISE FILES) ---
 # Exclude lockfiles and minified code
-NOISE_FILES="package-lock.json|yarn.lock|pnpm-lock.yaml|go.sum|cargo.lock|\.min\.js|\.min\.css|\.svg"
-EXCLUDE_PATTERN="$EXCLUDE_PATTERN|($NOISE_FILES)"
+NOISE_FILES="package-lock.json|yarn.lock|pnpm-lock.yaml|go.sum|cargo.lock|.min.js|.min.css|.svg"
+NOISE_REGEX=$(echo "$NOISE_FILES" | sed 's/\./\\./g')
+EXCLUDE_PATTERN="$EXCLUDE_PATTERN|($NOISE_REGEX)"
+
+# --- USER-SUPPLIED EXCLUSIONS ---
+if [ -n "$EXCLUDE" ]; then
+    EXCLUDE_REGEX=$(echo "$EXCLUDE" | tr ',' '|' | sed 's/\./\\./g')
+    EXCLUDE_PATTERN="$EXCLUDE_PATTERN|($EXCLUDE_REGEX)"
+fi
 
 # Safety check: Ensure we are in a git repo
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then

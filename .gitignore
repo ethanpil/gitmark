@@ -1,0 +1,11 @@
+# Testing stuff
+testing/
+.env
+output/
+
+# LLM export tool
+llm.sh
+llm_context.md
+llm.md
+code.md
+.claude/settings.local.json

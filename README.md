@@ -39,6 +39,7 @@ You can customize GitMark's behavior by passing environment variables before the
 | **`OUTPUT_FILE`** | `llm_context.md` | The name of the generated markdown file. |
 | **`MAX_FILESIZE_KB`** | `100` | Skip files larger than this size (in KB) to save context window. |
 | **`ADD_LINE_NUMBERS`** | `true` | Adds line numbers to code blocks for easier referencing in chats. |
+| **`EXCLUDE`** | *(none)* | Additional patterns to exclude, merged with built-in filters. Separate multiple patterns with a comma (e.g. `tests,docs`). Dots are treated as literals, so `.env` matches `.env` exactly. |
 
 ### Usage Examples
 
@@ -66,7 +67,21 @@ curl -fsSL https://raw.githubusercontent.com/ethanpil/gitmark/refs/heads/main/gi
 
 ```
 
-**4. Combine Multiple Options**
+**4. Exclude Additional Files or Directories**
+Exclude files or directories matching a pattern, in addition to the built-in filters. Separate multiple patterns with a comma. Dots are treated as literals.
+
+```bash
+# Exclude a single directory
+curl -fsSL https://raw.githubusercontent.com/ethanpil/gitmark/refs/heads/main/gitmark.sh | EXCLUDE="tests" sh
+
+# Exclude multiple patterns (directories and a file)
+curl -fsSL https://raw.githubusercontent.com/ethanpil/gitmark/refs/heads/main/gitmark.sh | EXCLUDE="tests,docs,.env" sh
+
+```
+
+> **Note:** `EXCLUDE` is **additive** — it extends the built-in filters (lockfiles, minified assets, `.gitignore` rules). It does not override them.
+
+**5. Combine Multiple Options**
 Customize everything at once.
 
 ```bash
