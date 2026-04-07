@@ -89,6 +89,14 @@ curl -fsSL https://raw.githubusercontent.com/ethanpil/gitmark/refs/heads/main/gi
 
 ```
 
+**6. On Windows**
+In the Windows cmd.exe shell, you can still pipe the script without saving it, but it will require sh.exe in your path, and its best to set the options before piping, like this:
+
+```batch
+SET EXCLUDE=".github,.gitignore,.replit,CHANGELOG.md,.claude,DOCUMENTATION.md,go.mod,go.sum,TODO.md" & curl -fsSL https://raw.githubusercontent.com/ethanpil/gitmark/refs/heads/main/gitmark.sh | sh.exe
+
+```
+
 ---
 
 ## Local Installation
