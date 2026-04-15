@@ -24,6 +24,8 @@ EXCLUDE_PATTERN="$EXCLUDE_PATTERN|($NOISE_REGEX)"
 
 # --- USER-SUPPLIED EXCLUSIONS ---
 if [ -n "$EXCLUDE" ]; then
+    # Strip surrounding quotes, carriage returns (\r from Windows CMD), and trailing commas
+    EXCLUDE=$(printf '%s' "$EXCLUDE" | tr -d '\r' | sed 's/^["\x27]//;s/["\x27,]*$//')
     EXCLUDE_REGEX=$(echo "$EXCLUDE" | tr ',' '|' | sed 's/\./\\./g')
     EXCLUDE_PATTERN="$EXCLUDE_PATTERN|($EXCLUDE_REGEX)"
 fi
