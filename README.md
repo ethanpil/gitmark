@@ -6,7 +6,7 @@ It respects your `.gitignore`, filters out "noise" (lockfiles, binaries), and in
 
 ## ✨ Features
 
-* **Git-Aware:** Automatically respects `.gitignore` rules (using `git ls-files`).
+* **Git-Aware:** Automatically respects `.gitignore` rules (using `git ls-files`). (Still works without git, usong find or posix fallback)
 * **Smart Filtering:** Automatically excludes "noise" files like `package-lock.json`, `yarn.lock`, `go.sum`, and minified assets (`.min.js`).
 * **Directory Tree:** Adds a visual map of your file structure at the top of the context file.
 * **Binary Safety:** Checks mime-types to ensure only text files are added.
