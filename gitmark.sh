@@ -30,11 +30,41 @@ if [ -n "$EXCLUDE" ]; then
     EXCLUDE_PATTERN="$EXCLUDE_PATTERN|($EXCLUDE_REGEX)"
 fi
 
-# Safety check: Ensure we are in a git repo
+# Detect if we are in a git repo
+IS_GIT_REPO=true
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "❌ Error: Not a git repository."
-    exit 1
+    IS_GIT_REPO=false
+    echo "⚠️ Not a git repository. Running without .gitignore rules."
 fi
+
+# Helper: Pure-shell recursive file lister (no external dependencies)
+_list_files_recursive() {
+    for item in "$1"/* "$1"/.*; do
+        # Skip non-existent globs and the . / .. entries
+        [ -e "$item" ] || continue
+        case "$(basename "$item")" in .|..) continue ;; esac
+
+        if [ -d "$item" ]; then
+            case "$item" in
+                ./.git|./.git/*) continue ;;
+            esac
+            _list_files_recursive "$item"
+        elif [ -f "$item" ]; then
+            echo "$item" | sed 's|^\./||'
+        fi
+    done
+}
+
+# Helper: List project files respecting gitignore (git) or using find/shell walk (non-git)
+list_files() {
+    if [ "$IS_GIT_REPO" = true ]; then
+        git ls-files --cached --others --exclude-standard
+    elif command -v find >/dev/null 2>&1; then
+        find . -not -path './.git/*' -not -path './.git' -type f | sed 's|^\./||'
+    else
+        _list_files_recursive "."
+    fi
+}
 
 echo "🚀 Starting export to $OUTPUT_FILE..."
 
@@ -49,12 +79,12 @@ echo "## Directory Structure" >> "$OUTPUT_FILE"
 echo '```text' >> "$OUTPUT_FILE"
 
 if command -v tree >/dev/null 2>&1; then
-    git ls-files --cached --others --exclude-standard | \
+    list_files | \
     grep -vE "$EXCLUDE_PATTERN" | \
     tree --fromfile . >> "$OUTPUT_FILE"
 else
     echo "." >> "$OUTPUT_FILE"
-    git ls-files --cached --others --exclude-standard | \
+    list_files | \
     grep -vE "$EXCLUDE_PATTERN" | \
     while read -r file; do
         echo "├── $file" >> "$OUTPUT_FILE"
@@ -67,7 +97,7 @@ echo "---" >> "$OUTPUT_FILE"
 # --- FILE AGGREGATION ---
 MAX_BYTES=$((MAX_FILESIZE_KB * 1024))
 
-git ls-files --cached --others --exclude-standard | while read -r file; do
+list_files | while read -r file; do
     # Check exclusion pattern
     if echo "$file" | grep -qE "$EXCLUDE_PATTERN"; then continue; fi
 
