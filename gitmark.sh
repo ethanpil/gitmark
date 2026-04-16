@@ -37,12 +37,32 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     echo "⚠️ Not a git repository. Running without .gitignore rules."
 fi
 
-# Helper: List project files respecting gitignore (git) or using find (non-git)
+# Helper: Pure-shell recursive file lister (no external dependencies)
+_list_files_recursive() {
+    for item in "$1"/* "$1"/.*; do
+        # Skip non-existent globs and the . / .. entries
+        [ -e "$item" ] || continue
+        case "$(basename "$item")" in .|..) continue ;; esac
+
+        if [ -d "$item" ]; then
+            case "$item" in
+                ./.git|./.git/*) continue ;;
+            esac
+            _list_files_recursive "$item"
+        elif [ -f "$item" ]; then
+            echo "$item" | sed 's|^\./||'
+        fi
+    done
+}
+
+# Helper: List project files respecting gitignore (git) or using find/shell walk (non-git)
 list_files() {
     if [ "$IS_GIT_REPO" = true ]; then
         git ls-files --cached --others --exclude-standard
-    else
+    elif command -v find >/dev/null 2>&1; then
         find . -not -path './.git/*' -not -path './.git' -type f | sed 's|^\./||'
+    else
+        _list_files_recursive "."
     fi
 }
 
